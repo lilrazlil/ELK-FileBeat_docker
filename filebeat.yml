@@ -2,7 +2,7 @@
 # Filebeat Config to send Elasticsearch/Logstash/Kibana in a docker host to Elasticsea-
 # sh cluster.
 
-name: filebeat-docker-logs-shipper
+name: filebeat-testdocker
 
 filebeat.config:
   modules:
@@ -12,66 +12,63 @@ filebeat.config:
 #================================ Autodiscover =======================================
 # Autodiscover all containers with elasticsearch images, and add an separate input for
 # each container and log type.
+
+#filebeat.inputs:
+#- type: container
+#  # путь к лог-файлам контейнеров
+#  paths:
+#    - '/var/lib/docker/containers/*/*.log'
+
+
 filebeat.autodiscover:
   providers:
     - type: docker
       templates:
         - condition:
-            contains:
-              docker.container.image: kibana
+            and:
+             - not.contains:
+                docker.container.image: elasticsearch
+             - not.contains:
+                docker.container.image: logstash
+             - not.contains:
+                docker.container.image: kibana
+             - not.contains:
+                docker.container.image: grafana
+             - not.contains:
+                docker.container.image: influxdb
+             - not.contains:
+                docker.container.image: portainer
+             - not.contains:
+                docker.container.image: filebeat
           config:
-            - module: kibana
-              log:
-                input:
-                  type: container
-                  paths: '/var/lib/docker/containers/${data.docker.container.id}/*.log'
-    - type: docker
-      templates:
-        - condition:
-            contains:
-              docker.container.image: logstash
-          config:
-            - module: logstash
-              log:
-                input:
-                  type: container
-                  paths: '/var/lib/docker/containers/${data.docker.container.id}/*.log'
-              slowlog:
-                input:
-                  type: container
-                  paths: '/var/lib/docker/containers/${data.docker.container.id}/*.log'
-    - type: docker
-      templates:
-        - condition:
-            contains:
-              docker.container.image: elasticsearch
-          config:
-            - module: elasticsearch
-              log:
-                input:
-                  type: container
-                  paths: '/var/lib/docker/containers/${data.docker.container.id}/*.log'
-              slowlog:
-                input:
-                  type: container
-                  paths: '/var/lib/docker/containers/${data.docker.container.id}/*.log'
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
 
 processors:
   - add_cloud_metadata: ~
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+
+output.elasticsearch:
+  hosts: ["http://elk:9200"]
+#  username: "elastic"
+#  password: "changeme"
 
 # Output to Logstash
-output.logstash:
-  hosts: ["logstash:5044"]
-
+#output.logstash:
+ # hosts: ["192.168.100.44"]
+#output.console:
+ # pretty: true
 #=================================== Kibana ==========================================
 # Enable setting up Kibana
 # Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
 # This requires a Kibana endpoint configuration.
 setup:
   kibana:
-    host: '${KIBANA_HOST_PORT}'
-    username: '${ELASTIC_USERNAME}'
-    password: '${ELASTIC_PASSWORD}'
+    host: 'elk:5601'
+#    username: 'elastic'
+#    password: 'changeme'
 
 #==================================== Monitoring =====================================
 # Enable Monitoring Beats
@@ -81,12 +78,12 @@ setup:
 # Use deprecated option to avoid current UX bug in 7.3.0 where filebeat creates a
 # standalone monitoring cluster in the monitoring UI.
 # see: https://github.com/elastic/beats/pull/13182
-xpack.monitoring:
-  enabled: true
-  elasticsearch:
-    hosts: '${ELASTICSEARCH_HOST_PORT}'
-    username: '${ELASTIC_USERNAME}'
-    password: '${ELASTIC_PASSWORD}'
+#xpack.monitoring:
+#  enabled: true
+#  elasticsearch:
+#    hosts: '192.168.100.44:9200'
+#    username: 'elastic'
+#    password: 'changeme'
 
 
 #monitoring:

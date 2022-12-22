@@ -1,0 +1,100 @@
+version: '3.5'
+
+volumes:
+ filebeat-data:
+ elk:
+ grafana:
+ influxdb2:
+
+networks:
+  spblib:
+
+services:
+  filebeat:
+    image: elastic/filebeat:8.3.3
+    restart: always
+    command: -e --strict.perms=false
+    user: root
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - filebeat-data:/var/lib/filebeat/data
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    ports:
+      - 5066:5066
+
+
+  elk:
+    image: sebp/elk
+    ports:
+      - "5601:5601"
+      - "9200:9200"
+      - "5044:5044"
+    volumes:
+      - elk:/opt
+      - /etc/timezone:/etc/timezone 
+      - /etc/localtime:/etc/localtime
+      - ./elasticsearch.yml:/opt/elasticsearch/config/elasticsearch.yml
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:9.3.2
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana:/var/lib/grafana
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  influxdb:
+    image: influxdb:2.6-alpine
+    volumes:
+      # Mount for influxdb data directory and configuration
+      - influxdb2:/var/lib/influxdb2:rw
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    ports:
+      - "8086:8086"
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:2.13.1
+    restart: always
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    ports:
+      - 9000:9000
+      - 9443:9443
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:1.25-alpine
+    volumes:
+      - $(pwd)/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /:/hostfs:ro
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    environment:
+      - HOST_ETC=/hostfs/etc 
+      - HOST_PROC=/hostfs/proc 
+      - HOST_SYS=/hostfs/sys 
+      - HOST_VAR=/hostfs/var 
+      - HOST_RUN=/hostfs/run 
+      - HOST_MOUNT_PREFIX=/hostfs 
+  
+  nginx:
+    container_name: nginx
+    image: nginx:1.22.1-alpine
+    volumes:
+    - ./spblib.conf:/etc/nginx/conf.d/spblib.conf
+    - ./status.conf:/etc/nginx/conf.d/status.conf
+    - /etc/localtime:/etc/localtime
+    - /etc/timezone:/etc/timezone
