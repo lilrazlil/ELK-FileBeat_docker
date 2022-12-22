@@ -101,6 +101,7 @@ services:
     ports:
       - "5044:5044"
       - "9600:9600"
+      - "50000:50000"
     healthcheck:
       test: ["CMD", "curl", "-s" ,"-XGET", "http://127.0.0.1:9600"]
 
@@ -173,8 +174,7 @@ services:
       - /etc/timezone:/etc/timezone
     ports:
       - "8086:8086"
-    networks:
-      - spblib
+
   portainer:
     container_name: portainer
     image: portainer/portainer-ce:2.13.1
