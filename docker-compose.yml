@@ -10,6 +10,8 @@ networks:
 volumes:
   elasticsearch-data:
   filebeat-data:
+  grafana:
+  influxdb2:
 
 secrets:
   elasticsearch.keystore:
@@ -147,3 +149,40 @@ services:
       - filebeat-data:/var/lib/filebeat/data
       - /etc/localtime:/etc/localtime
       - /etc/timezone:/etc/timezone
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:9.3.2
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana:/var/lib/grafana
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+
+  influxdb:
+    image: influxdb:latest
+    volumes:
+      - influxdb2:/var/lib/influxdb2:rw
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    ports:
+      - "8086:8086"
+    networks:
+      - spblib
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:2.13.1
+    restart: always
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    ports:
+      - 9000:9000 
+      - 9443:9443
