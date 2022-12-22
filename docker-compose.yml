@@ -102,8 +102,10 @@ services:
       - "5044:5044"
       - "9600:9600"
       - "50000:50000"
-    healthcheck:
-      test: ["CMD", "curl", "-s" ,"-XGET", "http://127.0.0.1:9600"]
+    depends_on:
+      - elasticsearch
+#    healthcheck:
+#      test: ["CMD", "curl", "-s" ,"-XGET", "http://127.0.0.1:9600"]
 
   kibana:
     image: elastdocker/kibana:${ELK_VERSION}
@@ -131,6 +133,9 @@ services:
         target: /certs/kibana.key
     ports:
       - "5601:5601"
+    depends_on:
+      - elasticsearch
+
 
   filebeat:
     image: ranchercharts/beats-filebeat:7.3.0 #docker.elastic.co/beats/filebeat:${ELK_VERSION}
@@ -150,7 +155,9 @@ services:
       - filebeat-data:/var/lib/filebeat/data
       - /etc/localtime:/etc/localtime
       - /etc/timezone:/etc/timezone
-
+    depends_on:
+      - elasticsearch
+      - logstash
   grafana:
     container_name: grafana
     image: grafana/grafana:9.3.2
