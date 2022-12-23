@@ -40,6 +40,10 @@ filebeat.autodiscover:
                 docker.container.image: portainer
              - not.contains:
                 docker.container.image: filebeat
+             - not.contains:
+                docker.container.image: nginx
+             - not.contains:
+                docker.container.image: elk
           config:
             - type: container
               paths:
