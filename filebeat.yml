@@ -15,10 +15,18 @@ filebeat.config:
 
 #filebeat.inputs:
 #- type: container
-#  # путь к лог-файлам контейнеров
+  # путь к лог-файлам контейнеров
 #  paths:
-#    - '/var/lib/docker/containers/*/*.log'
+#    - '/nginx/access.log*'
 
+filebeat.modules:
+- module: nginx
+  access:
+    enabled: true
+    var.paths: ["/nginx/access.log"]
+  error:
+    enabled: true
+    var.paths: ["/nginx/error.log"]
 
 filebeat.autodiscover:
   providers:
@@ -44,6 +52,8 @@ filebeat.autodiscover:
                 docker.container.image: nginx
              - not.contains:
                 docker.container.image: elk
+             - not.contains:
+                docker.container.image: telegraf
           config:
             - type: container
               paths:
