@@ -1,3 +1,9 @@
+version: "3.9"
+
+volumes:
+ db2:
+
+services:
   postgres-postgis:
     # контейнер postgres с установленным расширением pgvector
     image: postgis/postgis:12-3.3-alpine
@@ -9,6 +15,6 @@
       - POSTGRES_HOST_AUTH_METHOD=trust
       - POSTGRES_PASSWORD=pswrd
       - POSTGRES_DB=library
-      - DB=library
+#      - DB=library
     volumes:
       - db2:/var/lib/postgresql/data
