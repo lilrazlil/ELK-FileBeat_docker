@@ -1,0 +1,14 @@
+  postgres-postgis:
+    # контейнер postgres с установленным расширением pgvector
+    image: postgis/postgis:12-3.3-alpine
+    container_name: postgis
+    ports:
+    - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_PASSWORD=pswrd
+      - POSTGRES_DB=library
+      - DB=library
+    volumes:
+      - db2:/var/lib/postgresql/data

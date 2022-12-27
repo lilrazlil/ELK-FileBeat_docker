@@ -13,12 +13,13 @@ networks:
 
 services:
   filebeat:
+    container_name: filebeat
     image: elastic/filebeat:8.3.3
     restart: always
     command: -e --strict.perms=false
     user: root
     volumes:
-      - ./nginx_log/10.0.0.104:/nginx
+      - ./nginx_log/spblib:/nginx
       - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -30,6 +31,7 @@ services:
 
 
   elk:
+    container_name: elk
     image: sebp/elk:8.3.3
     ports:
       - "5601:5601"
@@ -86,7 +88,7 @@ services:
       - /:/hostfs:ro
       - /etc/localtime:/etc/localtime
       - /etc/timezone:/etc/timezone
-      - ./nginx_log/10.0.0.104:/nginx
+      - ./nginx_log/spblib:/nginx
     environment:
       - HOST_ETC=/hostfs/etc 
       - HOST_PROC=/hostfs/proc 
